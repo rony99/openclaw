@@ -61,6 +61,7 @@ import { normalizeMessageChannel } from "../../../utils/message-channel.js";
 import { isReasoningTagProvider } from "../../../utils/provider-utils.js";
 import { resolveAgentDir, resolveSessionAgentIds } from "../../agent-scope.js";
 import { createAnthropicPayloadLogger } from "../../anthropic-payload-log.js";
+import { createAnthropicRequestAttributionWrapper } from "../../anthropic-request-attribution.js";
 import { listActiveProcessSessionReferences } from "../../bash-process-references.js";
 import {
   analyzeBootstrapBudget,
@@ -2328,6 +2329,14 @@ export async function runEmbeddedAttempt(
         );
       }
 
+      activeSession.agent.streamFn = createAnthropicRequestAttributionWrapper(
+        activeSession.agent.streamFn,
+        {
+          runId: params.runId,
+          sessionId: activeSession.sessionId,
+          sessionKey: params.sessionKey,
+        },
+      );
       if (anthropicPayloadLogger) {
         activeSession.agent.streamFn = anthropicPayloadLogger.wrapStreamFn(
           activeSession.agent.streamFn,
